@@ -3,15 +3,16 @@
 
 #speedrun-overlay {
   position: fixed;
-  top: 50px;
-  left: 20px;
+  top: 0px;
+  left: 0px;
   width: 300px;
-  background-color: rgba(0, 0, 0, 0.9);
+  height: 100%;
+  background-color: rgba(41, 43, 46, 1);
+  border-right:4px solid rgba(53, 54, 57, 1);
   color: white;
   font-family: 'Roboto Mono', monospace;
   z-index: 99999;
   border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   padding: 10px;
   user-select: none;
 }
