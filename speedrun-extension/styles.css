@@ -1,0 +1,152 @@
+/* Speedrun Timer Overlay Styles */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
+
+#speedrun-overlay {
+  position: fixed;
+  top: 50px;
+  left: 20px;
+  width: 300px;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: white;
+  font-family: 'Roboto Mono', monospace;
+  z-index: 99999;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  padding: 10px;
+  user-select: none;
+}
+
+#speedrun-header {
+  font-size: 1.2em;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #444;
+  padding-bottom: 5px;
+}
+
+.speedrun-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid #222;
+  font-size: 0.9em;
+}
+
+.speedrun-section.active {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.speedrun-section.completed {
+  opacity: 0.7;
+}
+
+.section-name {
+  flex: 1;
+}
+
+.section-time {
+  width: 80px;
+  text-align: right;
+}
+
+.section-delta {
+  width: 60px;
+  text-align: right;
+  font-weight: bold;
+}
+
+.delta-ahead {
+  color: #00ff00;
+  /* Green */
+}
+
+.delta-behind {
+  color: #ff0000;
+  /* Red */
+}
+
+#speedrun-timer {
+  font-size: 3em;
+  text-align: right;
+  color: #00ff00;
+  margin-top: 10px;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
+}
+
+#speedrun-controls {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.speedrun-btn {
+  background-color: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8em;
+  border-radius: 3px;
+}
+
+.speedrun-btn:hover {
+  background-color: #444;
+}
+
+.speedrun-btn:active {
+  background-color: #222;
+}
+
+@keyframes speedrun-shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+.speedrun-shake {
+  animation: speedrun-shake 0.5s;
+  animation-iteration-count: infinite;
+}

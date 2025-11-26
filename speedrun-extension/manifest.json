@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Speedrun Timer Overlay",
+  "version": "1.0",
+  "description": "A speedrun-style timer overlay for example.com",
+  "permissions": ["activeTab", "scripting"],
+  "content_scripts": [
+    {
+      "matches": ["*://example.com/*", "*://www.example.com/*"],
+      "css": ["styles.css"],
+      "js": ["content.js"]
+    }
+  ]
+}
