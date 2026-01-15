@@ -6,3 +6,7 @@
 ```
 
 ![Speedrun overlay](speedrun.png)
+
+## Setup?
+
+Git gud.
