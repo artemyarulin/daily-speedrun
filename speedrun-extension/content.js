@@ -5,7 +5,24 @@
     if (document.getElementById('speedrun-overlay')) return;
 
     // --- Configuration ---
-    const SECTIONS_COUNT = 10;
+    // Pull attendees from the page (Range check-ins cards) so splits match the roster
+    const extractUsersFromPage = () => {
+        const cards = Array.from(document.querySelectorAll('.feedUpdateItem .card__title'));
+        const names = cards
+            .map((card) => card.textContent.trim())
+            .filter((name) => name.length > 0);
+
+        // De-duplicate while preserving first-seen order (users can have multiple cards across days)
+        const seen = new Set();
+        return names.filter((name) => {
+            if (seen.has(name)) return false;
+            seen.add(name);
+            return true;
+        });
+    };
+
+    let sectionNames = extractUsersFromPage();
+    let SECTIONS_COUNT = sectionNames.length > 0 ? sectionNames.length : 10;
     const TARGET_TIME_PER_SECTION = 60 * 1000; // 1 minute in milliseconds
 
     // --- State ---
@@ -21,22 +38,24 @@
     const overlay = document.createElement('div');
     overlay.id = 'speedrun-overlay';
 
-    let sectionsHtml = '';
-    for (let i = 1; i <= SECTIONS_COUNT; i++) {
-        sectionsHtml += `
-            <div class="speedrun-section" id="section-${i - 1}">
-                <span class="section-name">Section ${i}</span>
-                <span class="section-time" id="time-${i - 1}">-</span>
-                <span class="section-delta" id="delta-${i - 1}"></span>
-            </div>
-        `;
-    }
+    const buildSectionsHtml = () => {
+        let html = '';
+        for (let i = 1; i <= SECTIONS_COUNT; i++) {
+            const name = sectionNames[i - 1] || `Section ${i}`;
+            html += `
+                <div class="speedrun-section" id="section-${i - 1}">
+                    <span class="section-name">${name}</span>
+                    <span class="section-time" id="time-${i - 1}">-</span>
+                    <span class="section-delta" id="delta-${i - 1}"></span>
+                </div>
+            `;
+        }
+        return html;
+    };
 
     overlay.innerHTML = `
         <div id="speedrun-header">Standup Any%</div>
-        <div id="speedrun-sections">
-            ${sectionsHtml}
-        </div>
+        <div id="speedrun-sections">${buildSectionsHtml()}</div>
         <div id="speedrun-timer">00:00.00</div>
         <div id="speedrun-controls">
             <button id="btn-start" class="speedrun-btn">Start</button>
@@ -89,6 +108,35 @@
         if (index < SECTIONS_COUNT) {
             document.getElementById(`section-${index}`).classList.add('active');
         }
+    }
+
+    function applySectionNames(names) {
+        if (names.length === 0) return;
+        if (isRunning || elapsedTime > 0 || currentSectionIndex > 0) return;
+
+        sectionNames = names;
+        SECTIONS_COUNT = sectionNames.length;
+
+        const sectionsContainer = document.getElementById('speedrun-sections');
+        sectionsContainer.innerHTML = buildSectionsHtml();
+
+        timerDisplay.textContent = '00:00.00';
+        currentSectionIndex = 0;
+        lastSplitTime = 0;
+        elapsedTime = 0;
+        setActiveSection(currentSectionIndex);
+    }
+
+    if (sectionNames.length === 0) {
+        const observer = new MutationObserver(() => {
+            const found = extractUsersFromPage();
+            if (found.length > 0) {
+                applySectionNames(found);
+                observer.disconnect();
+            }
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
     }
 
     // Animations are registered by animations/*.js via registerAnimation
@@ -202,4 +250,88 @@
     btnFinish.addEventListener('click', finish);
 
     setActiveSection(currentSectionIndex);
+
+    // --- Debug Controls ---
+    const debugToggle = document.createElement('button');
+    debugToggle.id = 'speedrun-debug-toggle';
+    debugToggle.textContent = '.';
+    debugToggle.style.position = 'fixed';
+    debugToggle.style.bottom = '6px';
+    debugToggle.style.left = '6px';
+    debugToggle.style.width = '18px';
+    debugToggle.style.height = '18px';
+    debugToggle.style.opacity = '0.15';
+    debugToggle.style.background = 'rgba(255, 255, 255, 0.05)';
+    debugToggle.style.border = '1px solid rgba(255, 255, 255, 0.08)';
+    debugToggle.style.borderRadius = '3px';
+    debugToggle.style.cursor = 'pointer';
+    debugToggle.style.padding = '0';
+    debugToggle.style.color = 'rgba(255, 255, 255, 0.2)';
+    debugToggle.style.fontSize = '12px';
+    debugToggle.style.zIndex = '100001';
+    debugToggle.title = 'Debug';
+
+    const debugPanel = document.createElement('div');
+    debugPanel.id = 'speedrun-debug-panel';
+    debugPanel.style.position = 'fixed';
+    debugPanel.style.bottom = '32px';
+    debugPanel.style.left = '10px';
+    debugPanel.style.background = 'rgba(20, 20, 20, 0.92)';
+    debugPanel.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+    debugPanel.style.borderRadius = '6px';
+    debugPanel.style.padding = '8px';
+    debugPanel.style.display = 'none';
+    debugPanel.style.gap = '6px';
+    debugPanel.style.zIndex = '100001';
+    debugPanel.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.4)';
+    debugPanel.style.backdropFilter = 'blur(4px)';
+
+    const renderDebugButtons = () => {
+        debugPanel.innerHTML = '<div style="color:#fff;font-size:12px;margin-bottom:6px;">Animations</div>';
+        if (!window.speedrunAnimations || window.speedrunAnimations.length === 0) {
+            const empty = document.createElement('div');
+            empty.style.color = '#aaa';
+            empty.style.fontSize = '12px';
+            empty.textContent = 'No animations loaded';
+            debugPanel.appendChild(empty);
+            return;
+        }
+
+        window.speedrunAnimations.forEach((anim, idx) => {
+            const btn = document.createElement('button');
+            const label = anim.displayName || anim.name || `Animation ${idx + 1}`;
+            btn.textContent = label;
+            btn.style.margin = '2px';
+            btn.style.padding = '4px 6px';
+            btn.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+            btn.style.borderRadius = '4px';
+            btn.style.background = 'rgba(255, 255, 255, 0.05)';
+            btn.style.color = '#fff';
+            btn.style.fontSize = '12px';
+            btn.style.cursor = 'pointer';
+            btn.addEventListener('click', () => {
+                try {
+                    anim();
+                } catch (err) {
+                    console.error('Animation failed', err);
+                }
+            });
+            debugPanel.appendChild(btn);
+        });
+    };
+
+    let debugVisible = false;
+    debugToggle.addEventListener('click', () => {
+        debugVisible = !debugVisible;
+        if (debugVisible) {
+            renderDebugButtons();
+            debugPanel.style.display = 'flex';
+            debugPanel.style.flexWrap = 'wrap';
+        } else {
+            debugPanel.style.display = 'none';
+        }
+    });
+
+    document.body.appendChild(debugToggle);
+    document.body.appendChild(debugPanel);
 })();
